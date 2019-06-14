@@ -43,7 +43,7 @@ void Dialog::on_btnOpen_clicked()
             return;
         }
 
-        if (modbus_set_slave(_ctx, 247) == -1)
+        if (modbus_set_slave(_ctx, ui->spnSlave->value()) == -1)
         {
             ui->listWidget->addItem("Error setting slave address");
             return;
@@ -53,8 +53,10 @@ void Dialog::on_btnOpen_clicked()
 
 void Dialog::on_btnRead_clicked()
 {
-    uint16_t buff[10] = {0};
+    uint16_t *buff;
     QString line;
+    int ret, numRegs, start;
+
 
     if (_ctx == nullptr)
     {
@@ -62,7 +64,21 @@ void Dialog::on_btnRead_clicked()
     }
     else
     {
-        int ret = modbus_read_registers(_ctx, 7, 10, buff);
+        start = ui->spnStartReg->value();
+
+        numRegs = ui->spnNumber->value();
+
+        buff = new uint16_t[numRegs];
+
+        if (ui->chkInputReg->isChecked())
+        {
+            ret = modbus_read_input_registers(_ctx, start, numRegs, buff);
+        }
+        else
+        {
+            ret = modbus_read_registers(_ctx, start, numRegs, buff);
+        }
+
         if (ret == -1)
         {
             ui->listWidget->addItem("Read error");
@@ -77,6 +93,8 @@ void Dialog::on_btnRead_clicked()
 
             ui->listWidget->addItem(line);
         }
+
+        delete[] buff;
     }
 }
 
